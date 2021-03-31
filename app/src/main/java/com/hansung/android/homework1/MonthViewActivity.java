@@ -71,14 +71,13 @@ public class MonthViewActivity extends AppCompatActivity {
 
         lastDay += 7;
         String[] items  = new String[lastDay]; //마지막 날짜를 받아와서 인덱스로
-
         int j = 0;
         //첫주에대한 들여쓰기(1일의 요일에 따라)
         for(int i = 0; i< firstDay_of_month; i++){ //월요일 : firstDay_of_week == 1
             items[i] = (String) "";
             ++j ;
         }
-        //
+        //날짜 채우기
         int k = lastDay-7+j ; // ex) 42 - 7 + 1
         for(int i = j; i < k; i++){
             items[i] = (String) (i-j+1 + "");
