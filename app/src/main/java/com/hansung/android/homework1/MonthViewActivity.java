@@ -1,14 +1,15 @@
 package com.hansung.android.homework1;
 
 import androidx.appcompat.app.AppCompatActivity;
-
 import android.content.Intent;
 import android.os.Bundle;
 import android.view.View;
+import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.GridView;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import java.util.Calendar;
 
@@ -29,10 +30,18 @@ public class MonthViewActivity extends AppCompatActivity {
 
         //새롭게 생성될때 전에 생겼더 액티비티의 정보를 받아오기
         Intent intent =getIntent(); //해당 액티비티가 시작되었을 때 생긴 정보를 받기
-        year = intent.getIntExtra("year",-1); //int형 정보 아무것도 없는 경우 -1을 return 해줘라
-        month = intent.getIntExtra("month",-1); //int형 정보 아무것도 없는 경우 -1을 return 해줘라
+        year = intent.getIntExtra("year",-99); //int형 정보 아무것도 없는 경우 -99을 return 해줘라
+        month = intent.getIntExtra("month",-99); //int형 정보 아무것도 없는 경우 -99을 return 해줘라
 
-        if (year == -1 || month == -1 ){
+        if (month >= 12) {  //12월이 넘어가면 13 14 .. 가 되는것을 방지
+            month = 0;
+        }
+
+        if (month == -1) {
+            month = 11;
+        }
+
+        if (year == -99 || month == -99 ){  //처음 실행했을때만
             //현재 년도와 월을 알아보기(인터넷 검색하면 엄청 많이 나옴)
             //해당 되는 월의 마지막날은 언제인지도 필요함 (인터넷)
             //Calendar.getInstance()  : 현재 시간 저장
@@ -44,7 +53,6 @@ public class MonthViewActivity extends AppCompatActivity {
             //이번달의 마지막 일 구하기
             lastDay = Calendar.getInstance().getActualMaximum(Calendar.DAY_OF_MONTH); //이번달 일 수
         }
-
         //해당 달의 첫 일을 구하기 위한 Calender 객체 생성
         Calendar cal = Calendar.getInstance();
         // 객체 초기 세팅
@@ -68,8 +76,9 @@ public class MonthViewActivity extends AppCompatActivity {
         else if ( tmp == 7) //토요일
             firstDay_of_month = 6;
 
-
+        lastDay = cal.getActualMaximum(Calendar.DAY_OF_MONTH);  //이번달 일 수
         lastDay += 7;
+        System.out.println("lastDay"+lastDay);
         String[] items  = new String[lastDay]; //마지막 날짜를 받아와서 인덱스로
         int j = 0;
         //첫주에대한 들여쓰기(1일의 요일에 따라)
@@ -85,7 +94,6 @@ public class MonthViewActivity extends AppCompatActivity {
         for(int i = k; i < lastDay; i++  ){
             items[i] = (String) "";
         }
-
 
         //어댑터 준비 (배열 객체 이용, simple_list_item_1 리소스 사용)
         ArrayAdapter<String> adapt
@@ -103,6 +111,7 @@ public class MonthViewActivity extends AppCompatActivity {
         GridView gridview = (GridView) findViewById(R.id.gridview);
         //어댑터를 GridView 객체에 연결
         gridview.setAdapter(adapt);
+        System.out.println("어댑터연결");
 
 
         //다음 버튼이 눌려졌을때 MonthViewActivity에서  MonthViewActivity로 정보 전달
@@ -117,8 +126,13 @@ public class MonthViewActivity extends AppCompatActivity {
                         MonthViewActivity.class); //, 시작시킬 클래스(MonthViewActivity)의 정보
 
                 //새로 만들어진 Activity에 context 정보(년 월) 전달 --> 새로운 MonthViewActivity가 시작되면 return (intent객체에 담아져서)
-                intent.putExtra("year",year);//키, 값 (다음 버튼 눌렀을때 년도 바뀌는 것도 구현해야됨 : 12월 지나면 2022년으로 변경되도록)
-                intent.putExtra("month",month+1);//키, 값 (다음 버튼 눌렀을때 달이 바뀌니까 +1)
+                if (month == 11) {
+                    intent.putExtra("year",year+1);  //키, 값
+                    intent.putExtra("month", month+1);  //키, 값 (다음 버튼 눌렀을때 달이 바뀌니까 +1)
+                } else {
+                    intent.putExtra("year",year);//키, 값
+                    intent.putExtra("month",month+1);//키, 값 (다음 버튼 눌렀을때 달이 바뀌니까 +1)
+                }
 
                 startActivity(intent); //자기가 자기자신을 시작시킴 MonthViewActivity를 실행중인데 또 위에 쌓이는 구조 --> 스택처럼 쌓이기 때문에 메모리 부족해짐 --> 원래 떠있는거 지우고 새로 띄우는거 필요
                 finish();//현재 Activity 지우고 새로운거만 띄우기 (뒤로가기 버튼 누르면 바로 사라짐)
@@ -126,7 +140,36 @@ public class MonthViewActivity extends AppCompatActivity {
             }
         });
 
+        Button backBtn = findViewById(R.id.back);  //이전 버튼
+        backBtn.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v){ //onClick 이벤트가 발생했을 때 수행되는 코드
+                //시작할 컴포넌트의 이름을 intent 객체에 설정(명시적 intent) : 현재 앱 안에 있는 componet를 시작할 때 사용
+                Intent intent = new Intent(getApplicationContext(), //현재 Activity context 정보를 통신할 Activity에게 넘겨줌
+                        MonthViewActivity.class); //, 시작시킬 클래스(MonthViewActivity)의 정보
 
+                //새로 만들어진 Activity에 context 정보(년 월) 전달 --> 새로운 MonthViewActivity가 시작되면 return (intent객체에 담아져서)
+                if (month == 0) {
+                    intent.putExtra("year",year-1);  //키, 값
+                    intent.putExtra("month", month-1);  //키, 값 (다음 버튼 눌렀을때 달이 바뀌니까 -1)
+                } else {
+                    intent.putExtra("year",year);//키, 값
+                    intent.putExtra("month",month-1);//키, 값 (다음 버튼 눌렀을때 달이 바뀌니까 -1)
+                }
+
+                startActivity(intent); //자기가 자기자신을 시작시킴 MonthViewActivity를 실행중인데 또 위에 쌓이는 구조 --> 스택처럼 쌓이기 때문에 메모리 부족해짐 --> 원래 떠있는거 지우고 새로 띄우는거 필요
+                finish();//현재 Activity 지우고 새로운거만 띄우기 (뒤로가기 버튼 누르면 바로 사라짐)
+
+            }
+        });
+
+        gridview.setOnItemClickListener(new AdapterView.OnItemClickListener() {
+            @Override
+            public void onItemClick(AdapterView<?> parent, View view, int position, long id) {  //클릭이벤트 처리를 위해 리스트뷰 사용(인터넷)
+                String item = String.valueOf(parent.getItemAtPosition(position));
+                Toast.makeText(MonthViewActivity.this, year + "." + (month + 1) + "." + item, Toast.LENGTH_SHORT).show();
+                //날짜를 누르면 토스트메시지로 뜸
+            }
+        });
     }
-
 }
